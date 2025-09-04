@@ -70,7 +70,7 @@ class NotificationRepository:
         query = select(Notification).where(Notification.user_id == user_id)
 
         if status:
-            query = query.where(Notification.status == status)
+            query = query.where(Notification.status == status)  # type: ignore[arg-type]
 
         query = query.order_by(Notification.created_at.desc()).offset(skip).limit(limit)
 
@@ -89,7 +89,7 @@ class NotificationRepository:
         """
         query = select(Notification).where(
             Notification.user_id == user_id,
-            Notification.status == NotificationStatus.UNREAD,
+            Notification.status == NotificationStatus.UNREAD,  # type: ignore[arg-type]
         )
         result = await self.db.execute(query)
         return len(result.scalars().all())

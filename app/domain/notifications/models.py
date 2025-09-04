@@ -37,12 +37,12 @@ class Notification(Base):
         Enum(NotificationType, name="notificationtype"),
         default=NotificationType.INFO,
         nullable=False,
-    )
+    )  # type: ignore[assignment]
     status: NotificationStatus = Column(
         Enum(NotificationStatus, name="notificationstatus"),
         default=NotificationStatus.UNREAD,
         nullable=False,
-    )
+    )  # type: ignore[assignment]
     is_read = Column(Boolean, default=False, nullable=False)
     read_at = Column(DateTime, nullable=True)
 
