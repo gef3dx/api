@@ -7,6 +7,9 @@ from sqlalchemy.orm import relationship
 
 from app.db.base import Base
 
+# Import all models to ensure they are registered with the metadata
+# This ensures that all models are included in the metadata for migrations
+
 if TYPE_CHECKING:
     pass
 
