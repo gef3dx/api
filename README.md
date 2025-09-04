@@ -1,11 +1,12 @@
 # FastAPI Backend Project
 
-This is a FastAPI backend service with a repository/service architecture pattern. The system implements user authentication, profile management, and role-based access control (RBAC) using modern Python tools and best practices.
+This is a FastAPI backend service with a repository/service architecture pattern. The system implements user authentication, profile management, notification system, and role-based access control (RBAC) using modern Python tools and best practices.
 
 ## Features
 
 - User authentication with JWT tokens
 - Profile management system
+- Notification system with real-time capabilities
 - Role-based access control (client, executor, admin)
 - Password reset functionality with email verification
 - Database migrations with Alembic
@@ -57,6 +58,13 @@ app/
       schemas.py       # Auth Pydantic schemas
       service.py       # Authentication business logic
       repository.py    # Auth data access layer
+    notifications/
+      models.py        # Notification database model
+      schemas.py       # Notification Pydantic schemas
+      repository.py    # Notification data access layer
+      service.py       # Notification business logic
+      router.py        # Notification API endpoints
+      enums.py         # Notification-related enums
   di/
     container.py       # Dependency injection container
   api/
@@ -75,6 +83,7 @@ tests/
   test_auth.py         # Authentication tests
   test_users.py        # User functionality tests
   test_profiles.py     # Profile functionality tests
+  test_notifications.py # Notification functionality tests
 .env.example           # Environment variables example
 README.md              # Project documentation
 ```
@@ -140,25 +149,34 @@ Run the initialization script:
 ## API Endpoints
 
 ### Authentication
-- `POST /auth/register` - Register new user and create empty profile
-- `POST /auth/login` - Authenticate user and return JWT tokens
-- `POST /auth/refresh` - Refresh access token using refresh token
-- `POST /auth/logout` - Revoke current refresh token
-- `POST /auth/logout-all` - Revoke all refresh tokens for user
-- `POST /auth/request-password-reset` - Request password reset email
-- `POST /auth/confirm-password-reset` - Confirm password reset with token
+- `POST /api/v1/auth/register` - Register new user and create empty profile
+- `POST /api/v1/auth/login` - Authenticate user and return JWT tokens
+- `POST /api/v1/auth/refresh` - Refresh access token using refresh token
+- `POST /api/v1/auth/logout` - Revoke current refresh token
+- `POST /api/v1/auth/logout-all` - Revoke all refresh tokens for user
+- `POST /api/v1/auth/request-password-reset` - Request password reset email
+- `POST /api/v1/auth/confirm-password-reset` - Confirm password reset with token
 
 ### Users
-- `GET /users/me` - Get current user (without profile) - Authenticated
-- `GET /users/{id}` - Get specific user - Admin
-- `PATCH /users/{id}` - Update specific user - Admin
-- `GET /users` - List all users - Admin
+- `GET /api/v1/users/me` - Get current user (without profile) - Authenticated
+- `GET /api/v1/users/{id}` - Get specific user - Admin
+- `PATCH /api/v1/users/{id}` - Update specific user - Admin
+- `GET /api/v1/users` - List all users - Admin
 
 ### Profiles
-- `GET /profiles/me` - Get current user's profile - Authenticated
-- `PATCH /profiles/me` - Update current user's profile - Authenticated
-- `GET /profiles/{user_id}` - Get specific user's profile - Admin
-- `PATCH /profiles/{user_id}` - Update specific user's profile - Admin
+- `GET /api/v1/profiles/me` - Get current user's profile - Authenticated
+- `PATCH /api/v1/profiles/me` - Update current user's profile - Authenticated
+- `GET /api/v1/profiles/{user_id}` - Get specific user's profile - Admin
+- `PATCH /api/v1/profiles/{user_id}` - Update specific user's profile - Admin
+
+### Notifications
+- `POST /api/v1/notifications/` - Send a notification to a user - Authenticated
+- `GET /api/v1/notifications/` - Get notifications for the current user - Authenticated
+- `GET /api/v1/notifications/unread-count` - Get count of unread notifications - Authenticated
+- `GET /api/v1/notifications/{notification_id}` - Get a specific notification - Authenticated
+- `PATCH /api/v1/notifications/{notification_id}` - Update a notification - Authenticated
+- `POST /api/v1/notifications/mark-as-read` - Mark multiple notifications as read - Authenticated
+- `DELETE /api/v1/notifications/{notification_id}` - Delete a notification - Authenticated
 
 ## Testing
 

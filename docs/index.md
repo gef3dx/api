@@ -7,6 +7,7 @@
   - [Authentication](#authentication)
   - [Users](#users)
   - [Profiles](#profiles)
+  - [Notifications](#notifications)
 - [Development Guide](#development-guide)
   - [Setup](#setup)
   - [Project Structure](#project-structure)
@@ -18,7 +19,9 @@
 
 ## Project Overview
 
-This is a FastAPI backend service with a repository/service architecture pattern. The system implements user authentication, profile management, and role-based access control (RBAC) using modern Python tools and best practices.
+This is a FastAPI backend service with a repository/service architecture pattern. The system implements user authentication, profile management, notification system, and role-based access control (RBAC) using modern Python tools and best practices.
+
+The notification system allows users to receive and manage notifications with different types (info, success, warning, error) and statuses (read, unread). Users can send notifications to other users, retrieve their notifications, mark them as read, and delete them.
 
 ## API Endpoints
 
@@ -26,43 +29,43 @@ This is a FastAPI backend service with a repository/service architecture pattern
 
 #### Register a new user
 ```
-POST /auth/register
+POST /api/v1/auth/register
 ```
 Registers a new user and creates an empty profile.
 
 #### Login
 ```
-POST /auth/login
+POST /api/v1/auth/login
 ```
 Authenticates a user and returns JWT tokens.
 
 #### Refresh token
 ```
-POST /auth/refresh
+POST /api/v1/auth/refresh
 ```
 Refreshes the access token using a refresh token.
 
 #### Logout
 ```
-POST /auth/logout
+POST /api/v1/auth/logout
 ```
 Revokes the current refresh token.
 
 #### Logout from all devices
 ```
-POST /auth/logout-all
+POST /api/v1/auth/logout-all
 ```
 Revokes all refresh tokens for the user.
 
 #### Request password reset
 ```
-POST /auth/request-password-reset
+POST /api/v1/auth/request-password-reset
 ```
 Requests a password reset email.
 
 #### Confirm password reset
 ```
-POST /auth/confirm-password-reset
+POST /api/v1/auth/confirm-password-reset
 ```
 Confirms password reset with a token.
 
@@ -70,25 +73,25 @@ Confirms password reset with a token.
 
 #### Get current user
 ```
-GET /users/me
+GET /api/v1/users/me
 ```
 Gets the current user (without profile). Requires authentication.
 
 #### Get specific user
 ```
-GET /users/{id}
+GET /api/v1/users/{id}
 ```
 Gets a specific user. Requires admin role.
 
 #### Update specific user
 ```
-PATCH /users/{id}
+PATCH /api/v1/users/{id}
 ```
 Updates a specific user. Requires admin role.
 
 #### List all users
 ```
-GET /users
+GET /api/v1/users
 ```
 Lists all users. Requires admin role.
 
@@ -96,27 +99,148 @@ Lists all users. Requires admin role.
 
 #### Get current user's profile
 ```
-GET /profiles/me
+GET /api/v1/profiles/me
 ```
 Gets the current user's profile. Requires authentication.
 
 #### Update current user's profile
 ```
-PATCH /profiles/me
+PATCH /api/v1/profiles/me
 ```
 Updates the current user's profile. Requires authentication.
 
 #### Get specific user's profile
 ```
-GET /profiles/{user_id}
+GET /api/v1/profiles/{user_id}
 ```
 Gets a specific user's profile. Requires admin role.
 
 #### Update specific user's profile
 ```
-PATCH /profiles/{user_id}
+PATCH /api/v1/profiles/{user_id}
 ```
 Updates a specific user's profile. Requires admin role.
+
+### Notifications
+
+#### Send a notification
+```
+POST /api/v1/notifications/
+```
+Send a notification to a user. Requires authentication.
+
+Request body:
+```json
+{
+  "title": "string",
+  "message": "string",
+  "type": "info|success|warning|error",
+  "user_id": "uuid"
+}
+```
+
+#### Get user notifications
+```
+GET /api/v1/notifications/
+```
+Get notifications for the current user. Supports filtering by status. Requires authentication.
+
+Query parameters:
+- `status`: Filter by notification status (unread|read)
+- `limit`: Number of notifications to return (default: 100)
+- `offset`: Offset for pagination (default: 0)
+
+Response:
+```json
+{
+  "notifications": [
+    {
+      "id": "uuid",
+      "user_id": "uuid",
+      "title": "string",
+      "message": "string",
+      "type": "info|success|warning|error",
+      "status": "unread|read",
+      "is_read": "boolean",
+      "read_at": "datetime|null",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  ],
+  "total": "integer"
+}
+```
+
+#### Get unread notification count
+```
+GET /api/v1/notifications/unread-count
+```
+Get the count of unread notifications for the current user. Requires authentication.
+
+Response:
+```json
+{
+  "count": "integer"
+}
+```
+
+#### Get a specific notification
+```
+GET /api/v1/notifications/{notification_id}
+```
+Get a specific notification. Requires authentication and ownership of the notification.
+
+Response:
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "title": "string",
+  "message": "string",
+  "type": "info|success|warning|error",
+  "status": "unread|read",
+  "is_read": "boolean",
+  "read_at": "datetime|null",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
+```
+
+#### Update a notification
+```
+PATCH /api/v1/notifications/{notification_id}
+```
+Update a notification. Requires authentication and ownership of the notification.
+
+Request body:
+```json
+{
+  "title": "string|null",
+  "message": "string|null",
+  "type": "info|success|warning|error|null",
+  "status": "unread|read|null",
+  "is_read": "boolean|null"
+}
+```
+
+#### Mark notifications as read
+```
+POST /api/v1/notifications/mark-as-read
+```
+Mark multiple notifications as read. Requires authentication and ownership of all notifications.
+
+Request body:
+```json
+{
+  "notification_ids": ["uuid"]
+}
+```
+
+#### Delete a notification
+```
+DELETE /api/v1/notifications/{notification_id}
+```
+Delete a notification. Requires authentication and ownership of the notification.
 
 ## Development Guide
 
@@ -159,10 +283,11 @@ app/
   db/                   # Database configuration
   di/                   # Dependency injection
   api/                  # API routers and dependencies
-  domain/               # Domain modules (users, profiles, auth)
+  domain/               # Domain modules (users, profiles, auth, notifications)
     users/              # User management
     profiles/           # Profile management
     auth/               # Authentication
+    notifications/      # Notification system
   utils/                # Utility functions
 ```
 
