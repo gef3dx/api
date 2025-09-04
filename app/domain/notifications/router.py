@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_user_repository
+from app.core.rate_limiter import rate_limit
 from app.domain.notifications.models import NotificationStatus
 from app.domain.notifications.repository import NotificationRepository
 from app.domain.notifications.schemas import (
@@ -17,7 +18,9 @@ from app.domain.notifications.schemas import (
 from app.domain.notifications.service import NotificationService
 from app.domain.users.repository import UserRepository
 from app.domain.users.schemas import UserResponse as CurrentUser
-from app.utils.exceptions import AppException
+from app.domain.messages.templates import message_template, MessageTemplateType
+from app.tasks.notification_tasks import send_notification_task
+from app.utils.exceptions import AppException, RateLimitExceededException
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -41,12 +44,14 @@ async def get_notification_service(
 
 
 @router.post("/", response_model=NotificationResponse)
+@rate_limit(limit=5, window=60, key_prefix="send_notification")
 async def send_notification(
     notification_data: NotificationCreate,
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     notification_service: Annotated[
         NotificationService, Depends(get_notification_service)
     ],
+    template_type: MessageTemplateType | None = None,
 ) -> NotificationResponse:
     """
     Send a notification to a user.
@@ -55,13 +60,37 @@ async def send_notification(
         notification_data: Notification data
         current_user: The current authenticated user
         notification_service: The notification service
+        template_type: Optional template type to use
 
     Returns:
         NotificationResponse: The created notification
+
+    Raises:
+        RateLimitExceededException: If rate limit is exceeded
     """
+    # Use template if provided
+    if template_type:
+        rendered = message_template.render(
+            template_type,
+            {
+                "user_name": current_user.username,
+                "notification_title": notification_data.title,
+                "notification_message": notification_data.message,
+            },
+        )
+        notification_data.title = rendered["subject"]
+        notification_data.message = rendered["content"]
+
     # Set the user_id to the current user's ID
     notification_data.user_id = uuid.UUID(str(current_user.id))
-    notification = await notification_service.send_notification(notification_data)
+    
+    # For async processing, call the Celery task directly
+    notification_dict = notification_data.model_dump()
+    send_notification_task.delay(notification_dict)
+    
+    # For now, we'll still create the notification immediately
+    # In a full implementation, you might want to return a placeholder
+    notification = await notification_service.send_notification(notification_data, sync=True)
     return NotificationResponse.model_validate(notification)
 
 

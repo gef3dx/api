@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.rate_limiter import rate_limit
 from app.domain.messages.repository import MessageRepository
 from app.domain.messages.schemas import (
     MessageCreate,
@@ -14,9 +15,11 @@ from app.domain.messages.schemas import (
     MessageUpdate,
 )
 from app.domain.messages.service import MessageService
+from app.domain.messages.templates import message_template, MessageTemplateType
 from app.domain.users.models import User
 from app.domain.users.repository import UserRepository
-from app.utils.exceptions import AppException
+from app.tasks.message_tasks import send_message_task
+from app.utils.exceptions import AppException, RateLimitExceededException
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
@@ -32,10 +35,12 @@ def get_message_service(db: DBSession) -> MessageService:
 
 
 @router.post("/", response_model=MessageResponse)
+@rate_limit(limit=10, window=60, key_prefix="send_message")
 async def send_message(
     message_request: MessageSendRequest,
     current_user: CurrentUser,
     message_service: Annotated[MessageService, Depends(get_message_service)],
+    template_type: MessageTemplateType | None = None,
 ) -> MessageResponse:
     """
     Send a new message.
@@ -44,21 +49,45 @@ async def send_message(
         message_request: Message creation data
         current_user: The current authenticated user
         message_service: The message service
+        template_type: Optional template type to use
 
     Returns:
         MessageResponse: The created message
 
     Raises:
         HTTPException: If recipient not found
+        RateLimitExceededException: If rate limit is exceeded
     """
     try:
-        message_create = MessageCreate(
-            recipient_id=message_request.recipient_id,
-            subject=message_request.subject,
-            content=message_request.content,
-        )
+        # Use template if provided
+        if template_type:
+            rendered = message_template.render(
+                template_type,
+                {
+                    "user_name": current_user.username,
+                    "notification_title": message_request.subject,
+                    "notification_message": message_request.content,
+                },
+            )
+            message_create = MessageCreate(
+                recipient_id=message_request.recipient_id,
+                subject=rendered["subject"],
+                content=rendered["content"],
+            )
+        else:
+            message_create = MessageCreate(
+                recipient_id=message_request.recipient_id,
+                subject=message_request.subject,
+                content=message_request.content,
+            )
+        # For async processing, call the Celery task directly
+        message_dict = message_create.model_dump()
+        send_message_task.delay(str(current_user.id), message_dict)
+        
+        # For now, we'll still create the message immediately
+        # In a full implementation, you might want to return a placeholder
         message = await message_service.send_message(
-            uuid.UUID(str(current_user.id)), message_create
+            uuid.UUID(str(current_user.id)), message_create, sync=True
         )
         return MessageResponse.model_validate(message)
     except AppException as e:

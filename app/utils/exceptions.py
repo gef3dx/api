@@ -67,3 +67,16 @@ class ConflictException(AppException):
         details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(message, "CONFLICT", details)
+
+
+class RateLimitExceededException(AppException):
+    """Exception raised when rate limit is exceeded."""
+
+    def __init__(
+        self,
+        message: str = "Rate limit exceeded",
+        details: Optional[Dict[str, Any]] = None,
+        retry_after: Optional[int] = None,
+    ):
+        super().__init__(message, "RATE_LIMIT_EXCEEDED", details)
+        self.retry_after = retry_after

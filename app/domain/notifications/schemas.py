@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.domain.notifications.enums import NotificationPriority
 from app.domain.notifications.models import NotificationStatus, NotificationType
 
 
@@ -13,6 +14,7 @@ class NotificationBase(BaseModel):
     title: str = Field(..., max_length=255)
     message: str = Field(..., min_length=1)
     type: NotificationType = NotificationType.INFO
+    priority: NotificationPriority = NotificationPriority.NORMAL
 
 
 class NotificationCreate(NotificationBase):
@@ -28,6 +30,7 @@ class NotificationUpdate(BaseModel):
     message: Optional[str] = Field(None, min_length=1)
     type: Optional[NotificationType] = None
     status: Optional[NotificationStatus] = None
+    priority: Optional[NotificationPriority] = None
     is_read: Optional[bool] = None
 
 
@@ -37,6 +40,7 @@ class NotificationResponse(NotificationBase):
     id: UUID
     user_id: UUID
     status: NotificationStatus
+    priority: NotificationPriority
     is_read: bool
     read_at: Optional[datetime] = None
     created_at: datetime

@@ -9,7 +9,11 @@ if TYPE_CHECKING:
     pass
 
 from app.db.base import Base
-from app.domain.notifications.enums import NotificationStatus, NotificationType
+from app.domain.notifications.enums import (
+    NotificationPriority,
+    NotificationStatus,
+    NotificationType,
+)
 
 
 class Notification(Base):
@@ -43,6 +47,11 @@ class Notification(Base):
         default=NotificationStatus.UNREAD,
         nullable=False,
     )  # type: ignore[assignment]
+    priority: NotificationPriority = Column(
+        Enum(NotificationPriority, name="notificationpriority"),
+        default=NotificationPriority.NORMAL,
+        nullable=False,
+    )  # type: ignore[assignment]
     is_read = Column(Boolean, default=False, nullable=False)
     read_at = Column(DateTime, nullable=True)
 
@@ -58,4 +67,4 @@ class Notification(Base):
     )
 
     def __repr__(self):
-        return f"<Notification(id={self.id}, user_id={self.user_id}, title='{self.title}', type='{self.type}', status='{self.status}')>"
+        return f"<Notification(id={self.id}, user_id={self.user_id}, title='{self.title}', type='{self.type}', status='{self.status}', priority='{self.priority}')>"

@@ -15,3 +15,12 @@ class NotificationType(str, Enum):
     SUCCESS = "success"
     WARNING = "warning"
     ERROR = "error"
+
+
+class NotificationPriority(str, Enum):
+    """Notification priority enumeration."""
+
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
