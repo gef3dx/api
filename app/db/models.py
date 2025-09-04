@@ -1,12 +1,11 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
-from app.domain.notifications.enums import NotificationStatus, NotificationType
 
 # Import all models to ensure they are registered with the metadata
 # This ensures that all models are included in the metadata for migrations
