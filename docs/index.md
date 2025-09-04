@@ -19,9 +19,11 @@
 
 ## Project Overview
 
-This is a FastAPI backend service with a repository/service architecture pattern. The system implements user authentication, profile management, notification system, and role-based access control (RBAC) using modern Python tools and best practices.
+This is a FastAPI backend service with a repository/service architecture pattern. The system implements user authentication, profile management, notification system, private messaging system, and role-based access control (RBAC) using modern Python tools and best practices.
 
 The notification system allows users to receive and manage notifications with different types (info, success, warning, error) and statuses (read, unread). Users can send notifications to other users, retrieve their notifications, mark them as read, and delete them.
+
+The messaging system allows users to send private messages to other users, manage their inbox and sent messages, and perform CRUD operations on their messages.
 
 ## API Endpoints
 
@@ -242,6 +244,118 @@ DELETE /api/v1/notifications/{notification_id}
 ```
 Delete a notification. Requires authentication and ownership of the notification.
 
+### Messages
+
+#### Send a message
+```
+POST /api/v1/messages/
+```
+Send a message to a user. Requires authentication.
+
+Request body:
+```json
+{
+  "recipient_id": "uuid",
+  "subject": "string",
+  "content": "string"
+}
+```
+
+#### Get inbox
+```
+GET /api/v1/messages/inbox
+```
+Get messages received by the current user. Requires authentication.
+
+Query parameters:
+- `skip`: Number of messages to skip (default: 0)
+- `limit`: Maximum number of messages to return (default: 100)
+
+Response:
+```json
+{
+  "messages": [
+    {
+      "id": "uuid",
+      "sender_id": "uuid",
+      "recipient_id": "uuid",
+      "subject": "string",
+      "content": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  ],
+  "total": "integer"
+}
+```
+
+#### Get sent messages
+```
+GET /api/v1/messages/sent
+```
+Get messages sent by the current user. Requires authentication.
+
+Query parameters:
+- `skip`: Number of messages to skip (default: 0)
+- `limit`: Maximum number of messages to return (default: 100)
+
+Response:
+```json
+{
+  "messages": [
+    {
+      "id": "uuid",
+      "sender_id": "uuid",
+      "recipient_id": "uuid",
+      "subject": "string",
+      "content": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  ],
+  "total": "integer"
+}
+```
+
+#### Get a specific message
+```
+GET /api/v1/messages/{message_id}
+```
+Get a specific message. Requires authentication and ownership (sender or recipient) of the message.
+
+Response:
+```json
+{
+  "id": "uuid",
+  "sender_id": "uuid",
+  "recipient_id": "uuid",
+  "subject": "string",
+  "content": "string",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
+```
+
+#### Update a message
+```
+PATCH /api/v1/messages/{message_id}
+```
+Update a message. Requires authentication and ownership (sender only) of the message.
+
+Request body:
+```json
+{
+  "subject": "string|null",
+  "content": "string|null"
+}
+```
+
+#### Delete a message
+```
+DELETE /api/v1/messages/{message_id}
+```
+Delete a message. Requires authentication and ownership (sender or recipient) of the message.
+
 ## Development Guide
 
 ### Setup
@@ -288,6 +402,7 @@ app/
     profiles/           # Profile management
     auth/               # Authentication
     notifications/      # Notification system
+    messages/           # Private messaging system
   utils/                # Utility functions
 ```
 

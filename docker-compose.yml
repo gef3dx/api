@@ -13,6 +13,8 @@ services:
       - ./app:/app/app
     depends_on:
       - db
+    # The service includes all application features: user management, authentication,
+    # profile management, notifications, and private messaging between users
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   db:

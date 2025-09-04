@@ -7,6 +7,7 @@ This is a FastAPI backend service with a repository/service architecture pattern
 - User authentication with JWT tokens
 - Profile management system
 - Notification system with real-time capabilities
+- Private messaging system between users
 - Role-based access control (client, executor, admin)
 - Password reset functionality with email verification
 - Database migrations with Alembic
@@ -65,6 +66,12 @@ app/
       service.py       # Notification business logic
       router.py        # Notification API endpoints
       enums.py         # Notification-related enums
+    messages/
+      models.py        # Message database model
+      schemas.py       # Message Pydantic schemas
+      repository.py    # Message data access layer
+      service.py       # Message business logic
+      router.py        # Message API endpoints
   di/
     container.py       # Dependency injection container
   api/
@@ -178,6 +185,14 @@ Run the initialization script:
 - `POST /api/v1/notifications/mark-as-read` - Mark multiple notifications as read - Authenticated
 - `DELETE /api/v1/notifications/{notification_id}` - Delete a notification - Authenticated
 
+### Messages
+- `POST /api/v1/messages/` - Send a message to a user - Authenticated
+- `GET /api/v1/messages/inbox` - Get messages received by the current user - Authenticated
+- `GET /api/v1/messages/sent` - Get messages sent by the current user - Authenticated
+- `GET /api/v1/messages/{message_id}` - Get a specific message - Authenticated
+- `PATCH /api/v1/messages/{message_id}` - Update a message (sender only) - Authenticated
+- `DELETE /api/v1/messages/{message_id}` - Delete a message (sender or recipient) - Authenticated
+
 ## Testing
 
 Run tests with:
@@ -258,6 +273,8 @@ docker build -t fastapi-backend .
 # Run the container
 docker run -p 8000:8000 fastapi-backend
 ```
+
+The Docker setup includes all features of the application, including the messaging system, notification system, and user management.
 
 ## Project Configuration
 
