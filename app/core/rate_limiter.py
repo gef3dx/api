@@ -1,9 +1,6 @@
-import time
 import logging
-from typing import Optional, Dict, Any
+import time
 from functools import wraps
-
-import redis.asyncio as aioredis
 
 from app.core.redis import get_async_redis
 from app.utils.exceptions import RateLimitExceededException

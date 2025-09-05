@@ -1,10 +1,6 @@
 import json
 import logging
-from typing import Dict, Any, Callable, Awaitable
-import asyncio
-
-import redis.asyncio as aioredis
-import redis
+from typing import Any, Awaitable, Callable, Dict
 
 from app.core.redis import get_async_redis, get_sync_redis
 from app.domain.notifications.schemas import NotificationCreate

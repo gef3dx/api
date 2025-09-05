@@ -1,11 +1,12 @@
 import asyncio
 from uuid import UUID
-from app.domain.notifications.schemas import NotificationCreate
-from app.domain.notifications.enums import NotificationType, NotificationPriority
-from app.domain.notifications.service import NotificationService
-from app.domain.notifications.repository import NotificationRepository
-from app.domain.users.repository import UserRepository
+
 from app.db.session import get_db
+from app.domain.notifications.enums import NotificationPriority, NotificationType
+from app.domain.notifications.repository import NotificationRepository
+from app.domain.notifications.schemas import NotificationCreate
+from app.domain.notifications.service import NotificationService
+from app.domain.users.repository import UserRepository
 
 
 async def main():

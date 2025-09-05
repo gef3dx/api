@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional
+
 from jinja2 import Template
 
 

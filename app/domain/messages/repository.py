@@ -1,16 +1,16 @@
 import uuid
-from typing import List, Optional, Union, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional, Union, cast
 
 from sqlalchemy import select
+from sqlalchemy.engine import Result as SyncResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from sqlalchemy.engine import Result as SyncResult
 
 from app.domain.messages.models import Message
 from app.domain.messages.schemas import MessageCreate
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine import Result
+    pass
 
 
 class MessageRepository:
@@ -82,7 +82,9 @@ class MessageRepository:
             Message: The message or None if not found
         """
         if isinstance(self.db, AsyncSession):
-            result = await self.db.execute(select(Message).where(Message.id == message_id))
+            result = await self.db.execute(
+                select(Message).where(Message.id == message_id)
+            )
             return result.scalar_one_or_none()
         else:
             result = self.db.execute(select(Message).where(Message.id == message_id))
@@ -118,7 +120,9 @@ class MessageRepository:
         if isinstance(self.db, AsyncSession):
             result = await self.db.execute(
                 select(Message)
-                .where((Message.sender_id == user_id) | (Message.recipient_id == user_id))
+                .where(
+                    (Message.sender_id == user_id) | (Message.recipient_id == user_id)
+                )
                 .order_by(Message.created_at.desc())
                 .offset(skip)
                 .limit(limit)
@@ -128,7 +132,9 @@ class MessageRepository:
         else:
             result = self.db.execute(
                 select(Message)
-                .where((Message.sender_id == user_id) | (Message.recipient_id == user_id))
+                .where(
+                    (Message.sender_id == user_id) | (Message.recipient_id == user_id)
+                )
                 .order_by(Message.created_at.desc())
                 .offset(skip)
                 .limit(limit)

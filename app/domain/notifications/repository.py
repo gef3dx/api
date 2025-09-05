@@ -1,17 +1,17 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional, Union, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional, Union, cast
 
 from sqlalchemy import select, update
+from sqlalchemy.engine import Result as SyncResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from sqlalchemy.engine import Result as SyncResult
 
 from app.domain.notifications.models import Notification, NotificationStatus
 from app.domain.notifications.schemas import NotificationCreate
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine import Result
+    pass
 
 
 class NotificationRepository:
@@ -166,7 +166,8 @@ class NotificationRepository:
             int: Count of unread notifications
         """
         query = select(Notification).where(
-            (Notification.user_id == user_id) & (Notification.status == NotificationStatus.UNREAD)
+            (Notification.user_id == user_id)
+            & (Notification.status == NotificationStatus.UNREAD)
         )
         if isinstance(self.db, AsyncSession):
             result = await self.db.execute(query)
@@ -187,7 +188,8 @@ class NotificationRepository:
             int: Count of unread notifications
         """
         query = select(Notification).where(
-            (Notification.user_id == user_id) & (Notification.status == NotificationStatus.UNREAD)
+            (Notification.user_id == user_id)
+            & (Notification.status == NotificationStatus.UNREAD)
         )
         result = self.db.execute(query)
         return len(result.scalars().all())
@@ -251,9 +253,7 @@ class NotificationRepository:
             update(Notification)
             .where(Notification.id.in_(notification_ids))
             .values(
-                is_read=True,
-                status=NotificationStatus.READ,
-                read_at=datetime.utcnow()
+                is_read=True, status=NotificationStatus.READ, read_at=datetime.utcnow()
             )
         )
         if isinstance(self.db, AsyncSession):
@@ -274,9 +274,7 @@ class NotificationRepository:
             update(Notification)
             .where(Notification.id.in_(notification_ids))
             .values(
-                is_read=True,
-                status=NotificationStatus.READ,
-                read_at=datetime.utcnow()
+                is_read=True, status=NotificationStatus.READ, read_at=datetime.utcnow()
             )
         )
         self.db.execute(stmt)

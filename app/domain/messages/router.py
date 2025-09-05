@@ -15,11 +15,11 @@ from app.domain.messages.schemas import (
     MessageUpdate,
 )
 from app.domain.messages.service import MessageService
-from app.domain.messages.templates import message_template, MessageTemplateType
+from app.domain.messages.templates import MessageTemplateType, message_template
 from app.domain.users.models import User
 from app.domain.users.repository import UserRepository
 from app.tasks.message_tasks import send_message_task
-from app.utils.exceptions import AppException, RateLimitExceededException
+from app.utils.exceptions import AppException
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
@@ -83,7 +83,7 @@ async def send_message(
         # For async processing, call the Celery task directly
         message_dict = message_create.model_dump()
         send_message_task.delay(str(current_user.id), message_dict)
-        
+
         # For now, we'll still create the message immediately
         # In a full implementation, you might want to return a placeholder
         message = await message_service.send_message(

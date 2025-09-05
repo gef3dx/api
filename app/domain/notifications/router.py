@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_user_repository
 from app.core.rate_limiter import rate_limit
+from app.domain.messages.templates import MessageTemplateType, message_template
 from app.domain.notifications.models import NotificationStatus
 from app.domain.notifications.repository import NotificationRepository
 from app.domain.notifications.schemas import (
@@ -18,9 +19,8 @@ from app.domain.notifications.schemas import (
 from app.domain.notifications.service import NotificationService
 from app.domain.users.repository import UserRepository
 from app.domain.users.schemas import UserResponse as CurrentUser
-from app.domain.messages.templates import message_template, MessageTemplateType
 from app.tasks.notification_tasks import send_notification_task
-from app.utils.exceptions import AppException, RateLimitExceededException
+from app.utils.exceptions import AppException
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -83,14 +83,16 @@ async def send_notification(
 
     # Set the user_id to the current user's ID
     notification_data.user_id = uuid.UUID(str(current_user.id))
-    
+
     # For async processing, call the Celery task directly
     notification_dict = notification_data.model_dump()
     send_notification_task.delay(notification_dict)
-    
+
     # For now, we'll still create the notification immediately
     # In a full implementation, you might want to return a placeholder
-    notification = await notification_service.send_notification(notification_data, sync=True)
+    notification = await notification_service.send_notification(
+        notification_data, sync=True
+    )
     return NotificationResponse.model_validate(notification)
 
 

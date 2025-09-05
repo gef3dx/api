@@ -1,13 +1,14 @@
-from typing import Dict, Any, List, cast
-from uuid import UUID
 import logging
+from typing import Any, Dict, List, cast
+from uuid import UUID
 
 from app.core.celery_app import celery_app
-from app.domain.messages.schemas import MessageCreate
-from app.domain.messages.service import MessageService
 from app.db.session import get_sync_db
 from app.domain.messages.repository import MessageRepository
+from app.domain.messages.schemas import MessageCreate
+from app.domain.messages.service import MessageService
 from app.domain.users.repository import UserRepository
+
 # Import dependencies directly to avoid circular imports
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def send_message_task(self, sender_id: str, message_data: Dict[str, Any]) -> str
         return str(message.id)
     except Exception as e:
         logger.error(f"Failed to send message: {e}")
-        raise self.retry(exc=e, countdown=60, max_retries=3)
+        raise self.retry(exc=e, countdown=60, max_retries=3) from e
 
 
 @celery_app.task(bind=True, queue="messages")
@@ -85,4 +86,4 @@ def process_message_batch_task(self, sender_id: str, message_batch: list) -> dic
         return results
     except Exception as e:
         logger.error(f"Failed to process message batch: {e}")
-        raise self.retry(exc=e, countdown=60, max_retries=3)
+        raise self.retry(exc=e, countdown=60, max_retries=3) from e

@@ -1,14 +1,13 @@
-from typing import Dict, Any, List, cast
-from uuid import UUID
 import logging
+from typing import Any, Dict, List, cast
 
 from app.core.celery_app import celery_app
-from app.domain.notifications.schemas import NotificationCreate
-from app.domain.notifications.service import NotificationService
-from app.domain.notifications.enums import NotificationPriority
 from app.db.session import get_sync_db
 from app.domain.notifications.repository import NotificationRepository
+from app.domain.notifications.schemas import NotificationCreate
+from app.domain.notifications.service import NotificationService
 from app.domain.users.repository import UserRepository
+
 # Import dependencies directly to avoid circular imports
 
 logger = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ def send_notification_task(self, notification_data: Dict[str, Any]) -> str:
         return str(notification.id)
     except Exception as e:
         logger.error(f"Failed to send notification: {e}")
-        raise self.retry(exc=e, countdown=60, max_retries=3)
+        raise self.retry(exc=e, countdown=60, max_retries=3) from e
 
 
 @celery_app.task(bind=True, queue="notifications")
@@ -57,7 +56,11 @@ def process_notification_batch_task(self, notification_batch: list) -> dict:
         dict: Processing results
     """
     try:
-        results: Dict[str, Any] = {"success": 0, "failed": 0, "failed_notifications": []}
+        results: Dict[str, Any] = {
+            "success": 0,
+            "failed": 0,
+            "failed_notifications": [],
+        }
 
         # Create service directly with sync session
         db = get_sync_db()
@@ -84,7 +87,7 @@ def process_notification_batch_task(self, notification_batch: list) -> dict:
         return results
     except Exception as e:
         logger.error(f"Failed to process notification batch: {e}")
-        raise self.retry(exc=e, countdown=60, max_retries=3)
+        raise self.retry(exc=e, countdown=60, max_retries=3) from e
 
 
 @celery_app.task(bind=True, queue="notifications")
@@ -100,11 +103,11 @@ def cleanup_old_notifications_task(self, days_old: int = 30) -> int:
     """
     try:
         # Create service directly with sync session
-        db = get_sync_db()
-        notification_repo = NotificationRepository(db)
-        user_repo = UserRepository(db)
-        notification_service = NotificationService(notification_repo, user_repo)
-        
+        # db = get_sync_db()
+        # notification_repo = NotificationRepository(db)
+        # user_repo = UserRepository(db)
+        # notification_service = NotificationService(notification_repo, user_repo)
+
         # This would require implementing a cleanup method in the service
         # For now, we'll just log the task
         logger.info(f"Cleaning up notifications older than {days_old} days")
@@ -113,4 +116,4 @@ def cleanup_old_notifications_task(self, days_old: int = 30) -> int:
         return deleted_count
     except Exception as e:
         logger.error(f"Failed to cleanup old notifications: {e}")
-        raise self.retry(exc=e, countdown=300, max_retries=3)
+        raise self.retry(exc=e, countdown=300, max_retries=3) from e

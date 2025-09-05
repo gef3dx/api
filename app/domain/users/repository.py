@@ -1,10 +1,10 @@
 import uuid
-from typing import List, Optional, Union, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional, Union, cast
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
-from sqlalchemy.future import select
 from sqlalchemy.engine import Result as SyncResult
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
 from app.domain.users.enums import UserRole
@@ -12,7 +12,7 @@ from app.domain.users.models import User
 from app.domain.users.schemas import UserCreate
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine import Result
+    pass
 
 
 class UserRepository:
@@ -46,30 +46,30 @@ class UserRepository:
             self.db.refresh(db_user)
         return db_user
 
-    async def create(self, user_create: UserCreate) -> User:
-        """
-        Create a new user synchronously.
-
-        Args:
-            user_create: User creation schema
-
-        Returns:
-            User: The created user
-        """
-        db_user = User(
-            email=user_create.email,
-            username=user_create.username,
-            password_hash=get_password_hash(user_create.password),
-            role=UserRole.CLIENT,
-        )
-        self.db.add(db_user)
-        if isinstance(self.db, AsyncSession):
-            await self.db.commit()
-            await self.db.refresh(db_user)
-        else:
-            self.db.commit()
-            self.db.refresh(db_user)
-        return db_user
+    # async def create(self, user_create: UserCreate) -> User:
+    #     """
+    #     Create a new user synchronously.
+    #
+    #     Args:
+    #         user_create: User creation schema
+    #
+    #     Returns:
+    #         User: The created user
+    #     """
+    #     db_user = User(
+    #         email=user_create.email,
+    #         username=user_create.username,
+    #         password_hash=get_password_hash(user_create.password),
+    #         role=UserRole.CLIENT,
+    #     )
+    #     self.db.add(db_user)
+    #     if isinstance(self.db, AsyncSession):
+    #         await self.db.commit()
+    #         await self.db.refresh(db_user)
+    #     else:
+    #         self.db.commit()
+    #         self.db.refresh(db_user)
+    #     return db_user
 
     async def get_by_id(self, user_id: uuid.UUID) -> Optional[User]:
         """
@@ -142,7 +142,9 @@ class UserRepository:
             User: The user if found, None otherwise
         """
         if isinstance(self.db, AsyncSession):
-            result = await self.db.execute(select(User).where(User.username == username))
+            result = await self.db.execute(
+                select(User).where(User.username == username)
+            )
             return result.scalar_one_or_none()
         else:
             result = self.db.execute(select(User).where(User.username == username))
@@ -174,14 +176,16 @@ class UserRepository:
         if isinstance(self.db, AsyncSession):
             result = await self.db.execute(
                 select(User).where(
-                    (User.email == email_or_username) | (User.username == email_or_username)
+                    (User.email == email_or_username)
+                    | (User.username == email_or_username)
                 )
             )
             return result.scalar_one_or_none()
         else:
             result = self.db.execute(
                 select(User).where(
-                    (User.email == email_or_username) | (User.username == email_or_username)
+                    (User.email == email_or_username)
+                    | (User.username == email_or_username)
                 )
             )
             return cast(SyncResult, result).scalar_one_or_none()

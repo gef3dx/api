@@ -1,11 +1,11 @@
 import uuid
 from typing import List, Optional
 
+from app.domain.notifications.enums import NotificationPriority
 from app.domain.notifications.models import Notification, NotificationStatus
+from app.domain.notifications.pubsub import notification_pubsub
 from app.domain.notifications.repository import NotificationRepository
 from app.domain.notifications.schemas import NotificationCreate, NotificationUpdate
-from app.domain.notifications.enums import NotificationPriority
-from app.domain.notifications.pubsub import notification_pubsub
 from app.domain.users.repository import UserRepository
 from app.utils.exceptions import NotFoundException
 
@@ -60,7 +60,9 @@ class NotificationService:
 
         return notification
 
-    def send_notification_sync(self, notification_create: NotificationCreate) -> Notification:
+    def send_notification_sync(
+        self, notification_create: NotificationCreate
+    ) -> Notification:
         """
         Send a new notification synchronously for use in Celery tasks.
 

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from app.domain.notifications.pubsub import notification_pubsub
 
 # Set up logging
