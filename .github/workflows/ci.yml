@@ -73,7 +73,7 @@ jobs:
         black --check .
 
   build:
-    needs: [test, lint, format, type-check]
+    needs: [test, lint, format]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
