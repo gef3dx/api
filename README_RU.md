@@ -92,7 +92,6 @@ tests/
   test_profiles.py     # Тесты функциональности профиля
   test_notifications.py # Тесты функциональности уведомлений
   test_messages.py     # Тесты функциональности сообщений
-.env.example           # Environment variables example
-README.md              # Пример файла переменных окружения
+.env.example           # Пример файла переменных окружения
 ```
 
